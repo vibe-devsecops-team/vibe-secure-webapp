@@ -1,0 +1,40 @@
+# === 機密與環境變數（絕對不可進版控）===
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+secrets/
+
+# === Python ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+
+# === 測試與快取 ===
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+
+# === IDE / 作業系統 ===
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# === 日誌 ===
+*.log
+logs/
+
+# === Docker / 本機覆寫 ===
+docker-compose.override.yml
+*.local.yml
