@@ -1,0 +1,45 @@
+# 角色
+你是一位重視資安的資深 Python 後端工程師，熟悉 Flask 與 PostgreSQL。
+
+# 任務
+請實作本專案的「資料層」，包含兩個檔案：
+1. db.py：建立 SQLAlchemy 物件與資料庫連線設定（從環境變數讀取，不寫死）
+2. models.py：定義 User 與 Product 兩個 SQLAlchemy 模型
+
+# 技術規格
+- 框架：Flask，使用 Flask-SQLAlchemy
+- 資料庫：PostgreSQL
+- db.py 需提供：
+  - 一個全域的 SQLAlchemy 實例 db = SQLAlchemy()（供 app.py 之後 init_app 使用）
+  - 一個函式，從以下環境變數組出連線字串（SQLALCHEMY_DATABASE_URI）：
+    POSTGRES_USER、POSTGRES_PASSWORD、POSTGRES_HOST、POSTGRES_PORT、POSTGRES_DB
+- 連線字串、帳號、密碼一律從環境變數讀取，禁止寫死在程式碼中
+- models.py 從 db.py 匯入 db，定義模型，欄位如下：
+
+  User（對應資料表 users）
+  - id：整數，主鍵，自動遞增
+  - username：字串(50)，唯一，不可為空
+  - password_hash：字串(255)，不可為空
+  - created_at：時間戳，預設為現在時間
+
+  Product（對應資料表 products）
+  - id：整數，主鍵，自動遞增
+  - name：字串(100)，不可為空
+  - description：長文字，可為空
+  - price：數值(10,2)，可為空
+  - stock：整數，預設 0
+  - created_at：時間戳，預設為現在時間
+
+# 安全要求（必須全部遵守）
+- 資料庫帳密與連線資訊一律從環境變數讀取，禁止寫死
+- password_hash 欄位只儲存「雜湊後」的密碼（雜湊邏輯在後續登入模組處理，此模組不存明文）
+- 不可在程式碼或 log 中印出任何機密
+- 使用 SQLAlchemy ORM 定義模型（後續查詢以 ORM 進行，避免字串拼接 SQL）
+
+# 輸出格式
+- 分別輸出 db.py 與 models.py 兩個檔案的完整內容
+- 每個函式或模型上方加一行註解說明用途
+- 最後列出需要安裝的套件
+
+# 若需求不清楚
+- 不要自行假設或捏造規格，先列出疑問問我

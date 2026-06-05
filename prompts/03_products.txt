@@ -1,0 +1,31 @@
+# 角色
+你是一位重視資安的資深 Python 後端工程師，熟悉 Flask 與 PostgreSQL。
+
+# 任務
+請實作商品模組 routes/products.py：一個 Flask Blueprint，提供商品的列表、搜尋與新增三個端點。
+
+# 技術規格
+- 使用 Flask Blueprint（名稱 products_bp），之後會在 app.py 註冊
+- 從 db.py 匯入 db、從 models.py 匯入 Product
+- 端點：
+  1. GET /products —— 回傳所有商品的列表（JSON）
+  2. GET /products/search?q=關鍵字 —— 依關鍵字搜尋商品（比對 name 或 description），回傳符合的商品列表
+  3. POST /products —— 新增一筆商品；接收 JSON（name、description、price、stock）
+- 新增商品（POST /products）需要登入：檢查 Flask session 是否有 user_id，沒有則回傳 401
+- 資料流向：前端送請求 → 後端用 ORM 查詢／寫入 → 回傳 JSON
+- 回傳商品時輸出 id、name、description、price、stock（price 為 Numeric，需轉成字串或浮點數以利 JSON 序列化）
+
+# 安全要求（必須全部遵守）
+- 所有資料庫操作「必須」使用 SQLAlchemy ORM，嚴禁字串拼接或 f-string 組 SQL
+- 搜尋功能用 ORM 的過濾方法（例如 Product.query.filter(Product.name.ilike(...))），關鍵字以參數方式帶入，不可把關鍵字直接拼進原生 SQL —— 這是防止 SQL Injection 的關鍵
+- 新增商品時做輸入驗證：name 必填且有長度限制、price 與 stock 須為合法數值（price 非負、stock 非負整數）
+- 錯誤訊息使用通用文字，不洩漏資料庫結構或堆疊細節
+- 不可在 log 或回應中印出機密
+
+# 輸出格式
+- 輸出 routes/products.py 的完整內容
+- 每個函式上方加一行註解說明用途
+- 需要安裝的套件列在最後
+
+# 若需求不清楚
+- 不要自行假設或捏造規格，先列出疑問問我
