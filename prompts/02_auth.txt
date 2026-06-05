@@ -1,0 +1,30 @@
+# 角色
+你是一位重視資安的資深 Python 後端工程師，熟悉 Flask 與 PostgreSQL。
+
+# 任務
+請實作登入模組 routes/auth.py：一個 Flask Blueprint，提供 POST /login 端點，驗證使用者帳號密碼。
+
+# 技術規格
+- 使用 Flask Blueprint（名稱 auth_bp），之後會在 app.py 註冊
+- 從 db.py 匯入 db、從 models.py 匯入 User
+- 端點：POST /login，接收 JSON 格式的 username 與 password
+- 資料流向：前端送 JSON → 後端查詢並驗證 → 回傳 JSON 結果
+- 查詢邏輯：用 SQLAlchemy ORM 依 username 找出對應的 User
+- 密碼驗證：用 werkzeug.security 的 check_password_hash，比對使用者的 password_hash
+- 成功時：在 Flask session 記錄登入身分（例如 session["user_id"] = user.id），回傳成功的 JSON（HTTP 200）
+- 失敗時：回傳 HTTP 401 與通用錯誤訊息
+
+# 安全要求（必須全部遵守）
+- 查詢使用者「必須」使用 SQLAlchemy ORM（例如 User.query.filter_by(username=username).first()），嚴禁用字串拼接或 f-string 組 SQL —— 這是防止 SQL Injection 的關鍵
+- 密碼一律用 check_password_hash 比對雜湊值，禁止比對明文、禁止把密碼當查詢條件直接查
+- 對 username 與 password 做驗證：兩者必填、加上合理長度限制
+- 錯誤訊息使用通用文字（例如「帳號或密碼錯誤」），不可分別透露「帳號不存在」或「密碼錯誤」，以避免帳號列舉
+- 不可在 log 或回應中印出密碼或 password_hash
+
+# 輸出格式
+- 輸出 routes/auth.py 的完整內容
+- 每個函式上方加一行註解說明用途
+- 需要安裝的套件列在最後
+
+# 若需求不清楚
+- 不要自行假設或捏造規格，先列出疑問問我

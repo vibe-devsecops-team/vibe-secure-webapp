@@ -1,0 +1,36 @@
+# 角色
+你是一位重視資安的資深 Python 後端工程師，熟悉 Flask 與 PostgreSQL。
+
+# 任務
+請實作 app.py：Flask 應用程式的進入點，負責組裝整個後端——建立 app、從環境變數讀取設定、初始化資料庫、註冊所有 Blueprint、設定 CORS。
+
+# 技術規格
+- 在 backend/ 目錄下執行，匯入一律使用「絕對匯入」（以 backend 為根）：
+    from db import db, get_database_uri
+    from models import User, Product
+    from routes.auth import auth_bp
+    from routes.products import products_bp
+- 建立 module 層級的 Flask app 變數（方便日後用 gunicorn 以 app:app 啟動）
+- 設定（全部從環境變數讀，禁止寫死）：
+    - SQLALCHEMY_DATABASE_URI = 呼叫 get_database_uri()
+    - SECRET_KEY = 從環境變數 FLASK_SECRET_KEY 讀取
+    - SQLALCHEMY_TRACK_MODIFICATIONS = False
+- 用 db.init_app(app) 初始化資料庫
+- 在應用啟動時，於 app context 內呼叫 db.create_all() 建立資料表（已 import models 確保模型被註冊）
+- 註冊 Blueprint：auth_bp 與 products_bp
+- 設定 CORS（使用 flask-cors）：因為登入用 Flask session、前後端不同來源、需要帶 cookie，所以 supports_credentials=True；且因帶憑證時瀏覽器不允許萬用字元，origin 必須指定明確的前端來源（開發可先設為 http://localhost:8080，實際埠號之後再調整）
+- 提供 if __name__ == "__main__" 區塊以利本機執行
+
+# 安全要求（必須全部遵守）
+- 連線字串與 SECRET_KEY 一律從環境變數讀取，嚴禁寫死在程式碼中
+- debug 模式不可寫死為 True；預設為 False（或由環境變數控制）——因為 Flask debug 模式會開啟可遠端執行程式碼的除錯器，是嚴重風險
+- CORS 帶憑證時 origin 不可用萬用字元 "*"，須明確指定
+- 不可在 log 或回應中印出機密
+
+# 輸出格式
+- 輸出 app.py 的完整內容
+- 每個區塊上方加一行註解說明用途
+- 需要安裝的套件列在最後
+
+# 若需求不清楚
+- 不要自行假設或捏造規格，先列出疑問問我

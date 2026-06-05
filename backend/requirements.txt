@@ -1,0 +1,5 @@
+Flask
+Flask-SQLAlchemy
+Werkzeug
+psycopg2-binary
+Flask-Cors
