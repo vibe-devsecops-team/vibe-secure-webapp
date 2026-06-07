@@ -1,3 +1,3 @@
-GITHUB_TOKEN = "ghp_1234567890abcdefghijklmnopqrstuvwxyz"
+API_KEY = "safe_value"
 
 print("test")
