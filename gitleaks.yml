@@ -2,14 +2,14 @@ name: Gitleaks Scan
 
 on:
   pull_request:
+  workflow_dispatch:   # ⭐ 加這行才可以手動跑
 
 jobs:
   scan:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Install Gitleaks
         run: |
