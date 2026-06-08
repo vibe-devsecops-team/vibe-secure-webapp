@@ -1,8 +1,5 @@
 name: Semgrep Scan
 
-with:
-  config: p/python
-
 on:
   pull_request:
   workflow_dispatch:
@@ -12,7 +9,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Semgrep
+        run: pip install semgrep
 
       - name: Run Semgrep
-        uses: semgrep/semgrep-action@v1
+        run: semgrep scan --config auto
