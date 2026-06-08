@@ -20,6 +20,6 @@ jobs:
         run: find 
 
       - name: Run Semgrep
-        run: semgrep scan --config=p/security-audit --config=p/owasp-top-ten --exit-code 1 .
+        run: semgrep scan --config=p/security-audit --config=p/owasp-top-ten --error .
 
        
