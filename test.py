@@ -1,11 +1,4 @@
-user = input()
-
+user = "admin"
 query = f"SELECT * FROM users WHERE name='{user}'"
-
-print(query)
-
-
-
-API_KEY = "safe_value"
-
-print("test")
+API_KEY = "123456789"
+eval(input("Enter code: "))
