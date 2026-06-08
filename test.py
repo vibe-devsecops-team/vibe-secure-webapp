@@ -1,6 +1,6 @@
 user = input()
 
-query = f"SELECT * FROM users WHERE username = '{user}'"
+query = f"SELECT * FROM users WHERE name='{user}'"
 
 print(query)
 
