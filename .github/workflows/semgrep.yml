@@ -3,6 +3,7 @@ name: Semgrep Scan
 on:
   pull_request:
   workflow_dispatch:
+  push:
 
 jobs:
   semgrep:
@@ -16,4 +17,4 @@ jobs:
         run: pip install semgrep
 
       - name: Run Semgrep
-        run: semgrep scan --config auto
+        run: semgrep --config=p/python .
