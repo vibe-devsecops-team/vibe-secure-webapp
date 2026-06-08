@@ -1,5 +1,8 @@
 name: Semgrep Scan
 
+with:
+  config: p/python
+
 on:
   pull_request:
   workflow_dispatch:
