@@ -16,5 +16,10 @@ jobs:
       - name: Install Semgrep
         run: pip install semgrep
 
+      - name: Show files
+        run: find 
+
       - name: Run Semgrep
         run: semgrep scan --config=p/security-audit --config=p/owasp-top-ten .
+
+       
