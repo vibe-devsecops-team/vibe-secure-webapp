@@ -1,5 +1,6 @@
+API_KEY = "sk-123456"
 
-API_KEY = "sk_test_123"
-eval("print(123)")
-user = "admin"
-query = f"SELECT * FROM users WHERE name='{user}'"
+user = input()
+eval(user)
+
+query = "SELECT * FROM users WHERE name='" + user + "'"
