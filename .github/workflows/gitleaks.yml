@@ -2,7 +2,7 @@ name: Gitleaks Scan
 
 on:
   pull_request:
-  workflow_dispatch:
+  push:
 
 jobs:
   scan:
@@ -11,11 +11,5 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Gitleaks
-        run: |
-          wget https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks_8.18.4_linux_x64.tar.gz
-          tar -xzf gitleaks_8.18.4_linux_x64.tar.gz
-          sudo mv gitleaks /usr/local/bin/
-
       - name: Run Gitleaks
-        run: gitleaks detect --source . --verbose --exit-code 1
+        uses: gitleaks/gitleaks-action@v2
