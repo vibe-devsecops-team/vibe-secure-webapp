@@ -1,0 +1,35 @@
+# 角色
+你是一位重視資安的資深前端工程師，熟悉原生 HTML / CSS / JavaScript。
+
+# 任務
+請實作前端靜態頁，包含四個檔案：
+1. index.html —— 登入頁
+2. products.html —— 商品列表／搜尋／新增 頁
+3. style.css —— 樣式
+4. app.js —— 用 fetch 呼叫後端 API 的邏輯
+
+# 技術規格
+- 純原生 HTML / CSS / JavaScript（不使用任何框架）
+- 後端 API base URL 用一個可修改的常數定義在 app.js 最上方（開發先設 const API_BASE = "http://localhost:5000"）
+- 後端端點：
+    - POST {API_BASE}/login —— body 為 JSON {username, password}；成功後導向 products.html
+    - GET  {API_BASE}/products —— 取得所有商品並顯示成列表
+    - GET  {API_BASE}/products/search?q=關鍵字 —— 依關鍵字搜尋並顯示結果
+    - POST {API_BASE}/products —— body 為 JSON {name, description, price, stock}，新增商品（需登入）
+- 所有 fetch 呼叫都要帶 credentials: "include"（登入狀態靠 Flask session 的 cookie，跨來源要帶 cookie 才送得過去）
+- index.html：帳號、密碼輸入欄 + 登入按鈕；成功導向 products.html，失敗顯示通用錯誤訊息
+- products.html：顯示商品列表、一個搜尋框、一個新增商品的表單；操作後即時更新畫面
+- 錯誤處理：API 回傳非成功狀態時，顯示簡潔訊息給使用者
+
+# 安全要求（必須全部遵守）
+- 把後端回傳的資料（商品名稱、描述等）放進畫面時，必須用 textContent 或安全的 DOM 方法，「禁止」用 innerHTML 直接塞未經處理的資料 —— 這是防止 XSS（跨站腳本）的關鍵
+- 前端程式碼中不可包含任何機密（API key、密碼等），前端是公開的
+- 錯誤訊息使用通用文字，不顯示後端的堆疊或內部細節
+
+# 輸出格式
+- 分別輸出 index.html、products.html、style.css、app.js 四個檔案的完整內容
+- 重要邏輯加上註解
+- 若有需要特別說明的地方列在最後
+
+# 若需求不清楚
+- 不要自行假設或捏造規格，先列出疑問問我
