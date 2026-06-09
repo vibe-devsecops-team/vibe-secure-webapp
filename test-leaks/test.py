@@ -1,5 +1,5 @@
 # ===== Semgrep 會抓 =====
-API_KEY = "sk_test_123456"
+API_KEY = "123456"
 
 import os
 
