@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products - Secure Product App</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Product Management</h1>
+            <button id="logoutButton" class="logout-button">Logout</button>
+        </header>
+
+        <!-- 通用訊息顯示區塊，使用 textContent 避免 XSS -->
+        <p id="message" class="info-message"></p>
+
+        <section class="search-section">
+            <h2>Search Products</h2>
+            <form id="searchForm">
+                <div class="form-group">
+                    <label for="searchQuery">Keyword:</label>
+                    <input type="text" id="searchQuery" name="q" placeholder="Enter product name or description">
+                </div>
+                <button type="submit">Search</button>
+                <button type="button" id="clearSearchButton">Clear Search</button>
+            </form>
+        </section>
+
+        <section class="product-list-section">
+            <h2>All Products</h2>
+            <div id="productList" class="product-list">
+                <!-- 商品列表將由 JavaScript 動態載入並顯示 -->
+                <p>Loading products...</p>
+            </div>
+        </section>
+
+        <section class="add-product-section">
+            <h2>Add New Product</h2>
+            <form id="addProductForm">
+                <div class="form-group">
+                    <label for="productName">Name:</label>
+                    <input type="text" id="productName" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="productDescription">Description:</label>
+                    <textarea id="productDescription" name="description" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="productPrice">Price:</label>
+                    <input type="number" id="productPrice" name="price" step="0.01" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="productStock">Stock:</label>
+                    <input type="number" id="productStock" name="stock" min="0" required>
+                </div>
+                <button type="submit">Add Product</button>
+            </form>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

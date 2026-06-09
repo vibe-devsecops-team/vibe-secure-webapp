@@ -1,0 +1,33 @@
+# 角色
+你是一位重視資安的資深 Python 後端工程師，熟悉 Flask 與 SQLAlchemy。
+
+# 任務
+請寫一支種子資料腳本 seed.py，放在 backend/ 底下，用來在資料庫中建立測試資料，方便手動測試登入與商品功能。
+
+# 專案結構（供你理解，沿用既有檔案）
+- db.py 內有 SQLAlchemy 實例 db
+- models.py 內有 User（欄位含 username、password_hash）與 Product（欄位含 name、description、price、stock）兩個 ORM 模型
+- app.py 內建立並設定了 Flask app 物件（已用 db.init_app(app) 綁定）
+- 後端用「以 backend 為根的絕對匯入」，所以 seed.py 請用 from app import app、from db import db、from models import User, Product 這種匯入方式
+
+# 技術規格
+- 在 app 的 application context 底下操作（with app.app_context():）
+- 建立一個測試使用者：
+    - username 與 password 從環境變數讀取（SEED_USERNAME、SEED_PASSWORD），若未設定則使用合理的預設值
+    - 密碼必須用 werkzeug.security 的 generate_password_hash 雜湊後存入 password_hash 欄位（絕不可存明文）
+- 建立 4~5 筆測試商品，name 與 description 各有區別（方便測試搜尋），price 與 stock 給合理的值
+- 腳本要可重複執行而不會產生重複資料（insert 前先檢查該 username／該商品是否已存在，已存在就略過）
+- 最後 db.session.commit()，並印出簡短的結果摘要（建立了哪些、或已存在而略過）
+
+# 安全要求
+- 密碼一律雜湊，不可明文存入或印出
+- 不可在程式中寫死任何正式機密；測試帳密從環境變數讀取
+- 不可印出密碼或雜湊值
+
+# 輸出格式
+- 輸出 seed.py 的完整內容
+- 重要邏輯加上註解
+- 最後說明如何設定環境變數與執行
+
+# 若需求不清楚
+- 不要自行假設或捏造規格，先列出疑問問我

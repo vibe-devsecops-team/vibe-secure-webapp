@@ -24,6 +24,8 @@ env/
 .coverage
 htmlcov/
 .mypy_cache/
+*_output.txt
+test_gemini.py
 
 # === IDE / 作業系統 ===
 .vscode/
@@ -38,3 +40,4 @@ logs/
 # === Docker / 本機覆寫 ===
 docker-compose.override.yml
 *.local.yml
+

@@ -1,0 +1,55 @@
+# docker-compose.yml
+
+
+# 定義服務
+services:
+  # 資料庫服務
+  db:
+    # 使用 PostgreSQL 16 的 Alpine 精簡版映像，固定版本標籤。
+    image: postgres:16-alpine
+    # 從專案根目錄的 .env 檔案載入環境變數，用於設定資料庫使用者、密碼和名稱。
+    # 這樣可以避免將機密資訊硬編碼到 docker-compose.yml 中。
+    env_file:
+      - ./.env
+    # 將資料庫資料持久化到具名 volume，避免容器重建時資料遺失。
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    # 設定健康檢查，確保資料庫服務完全啟動並準備好接受連線。
+    # backend 服務將會等待 db 服務通過健康檢查後才啟動。
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s # 每 5 秒檢查一次
+      timeout: 5s  # 每次檢查的超時時間
+      retries: 5   # 失敗 5 次後宣告不健康
+
+  # 後端服務
+  backend:
+    # 從 ./backend 目錄下的 Dockerfile 建置映像。
+    build:
+      context: ./backend
+    # 從專案根目錄的 .env 檔案載入環境變數，用於 Flask 應用程式。
+    # 這包含了資料庫連線資訊 (POSTGRES_HOST、POSTGRES_USER、POSTGRES_PASSWORD、POSTGRES_DB)
+    # 以及 FLASK_SECRET_KEY 等機密。
+    env_file:
+      - ./.env
+    # 宣告依賴 db 服務，並等待 db 服務通過健康檢查後才啟動 backend。
+    depends_on:
+      db:
+        condition: service_healthy
+    # 將容器的 5000 埠映射到主機的 5000 埠。
+    ports:
+      - "5000:5000"
+
+  # 前端服務
+  frontend:
+    # 從 ./frontend 目錄下的 Dockerfile 建置映像。
+    build:
+      context: ./frontend
+    # 將容器的 80 埠 (Nginx 預設) 映射到主機的 8080 埠。
+    # 這樣可以透過 http://localhost:8080 訪問前端。
+    ports:
+      - "8080:80"
+
+# 定義具名 volume，用於 db 服務的資料持久化。
+volumes:
+  db_data:

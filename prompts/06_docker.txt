@@ -1,0 +1,46 @@
+# 角色
+你是一位重視資安的資深 DevOps 工程師，熟悉 Docker、Flask 與 PostgreSQL。
+
+# 任務
+請實作這個專案的容器化設定，包含三個檔案：
+1. backend/Dockerfile —— 將 Flask 後端容器化
+2. frontend/Dockerfile —— 用 nginx 提供前端靜態頁
+3. docker-compose.yml（放在專案根目錄）—— 編排 frontend / backend / db 三個服務
+
+# 專案結構（供你理解）
+- backend/ 內有 app.py、db.py、models.py、routes/、requirements.txt；後端用「以 backend 為根的絕對匯入」，所以容器內工作目錄要直接包含這些檔案（app:app 中的 app.py 是進入點，內含 module 層級的 app 變數）
+- frontend/ 內有 index.html、products.html、style.css、app.js（純靜態檔）
+- 機密（資料庫帳密、FLASK_SECRET_KEY 等）放在專案根目錄的 .env
+
+# 技術規格
+## backend/Dockerfile
+- 基底映像用 python 的精簡版並「固定版本標籤」（例如 python:3.12-slim，不要用 latest）
+- 設定工作目錄、先複製 requirements.txt 並安裝套件、再複製程式碼
+- 用 gunicorn 啟動（綁定 0.0.0.0:5000，啟動 app:app）
+- 對外開放 5000 埠
+
+## frontend/Dockerfile
+- 基底映像用 nginx 的精簡固定版本（例如 nginx:1.27-alpine）
+- 把靜態檔複製到 nginx 的網頁目錄
+- 對外開放 80 埠
+
+## docker-compose.yml
+- 三個服務：
+    - db：官方 postgres 固定版本映像；用 env_file 讀 .env 取得 POSTGRES_USER / POSTGRES_PASSWORD / POSTGRES_DB；掛一個具名 volume 讓資料持久化；設 healthcheck（用 pg_isready 確認就緒）
+    - backend：以 backend/Dockerfile 建置（build context 指向 ./backend）；用 env_file 讀 .env；depends_on db 且等到 db healthy 才啟動（condition: service_healthy）；host 對應 5000:5000
+    - frontend：以 frontend/Dockerfile 建置（context 指向 ./frontend）；host 對應 8080:80
+- 服務名稱要叫 db，對應 .env 裡的 POSTGRES_HOST=db
+
+# 安全要求（必須全部遵守）
+- 機密一律不可寫進 Dockerfile 或 docker-compose.yml，一律透過 .env / env_file 在執行時注入；不可把 .env 複製進映像
+- 基底映像要「固定版本標籤」，不要用 latest（利於重現與漏洞掃描）
+- 後端容器內以「非 root 使用者」執行（建立並切換到非特權使用者），降低容器被入侵時的風險
+- 不可在 Dockerfile、compose 或 log 中出現任何機密值
+
+# 輸出格式
+- 分別輸出 backend/Dockerfile、frontend/Dockerfile、docker-compose.yml 三個檔案的完整內容
+- 重要指令加上註解
+- 若有需要新增的套件（如 gunicorn）或設定變更，列在最後
+
+# 若需求不清楚
+- 不要自行假設或捏造規格，先列出疑問問我
