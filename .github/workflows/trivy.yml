@@ -9,12 +9,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Install Trivy
+        run: |
+          wget https://github.com/aquasecurity/trivy/releases/download/v0.72.0/trivy_0.72.0_Linux-64bit.tar.gz
+          tar -xzf trivy_0.72.0_Linux-64bit.tar.gz
+          sudo mv trivy /usr/local/bin/
       - name: Run Trivy filesystem scan
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          scan-type: fs
-          scan-ref: .
-          severity: HIGH,CRITICAL
-          exit-code: 1
-          ignore-unfixed: true
+        run: trivy fs --scanners vuln --severity HIGH,CRITICAL --exit-code 1 --ignore-unfixed .
