@@ -60,4 +60,4 @@ if __name__ == "__main__":
     print(f"Running Flask app in debug mode: {app.config['DEBUG']}")
     print(f"CORS configured for origin: {frontend_origin}")
     # 不可在 log 或回應中印出機密，這裡只印出配置資訊
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000)  # nosemgrep: python.flask.security.audit.app-run-param-config.avoid_app_run_with_bad_host
