@@ -6,6 +6,7 @@ on:
   workflow_dispatch:
 jobs:
   scan:
+    name: Trivy Scan
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
