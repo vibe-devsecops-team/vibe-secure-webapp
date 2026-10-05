@@ -15,7 +15,7 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          curl --fail-with-body -sS \
+          HTTP_CODE=$(curl -sS \
             -X POST \
             "https://generativelanguage.googleapis.com/v1beta/interactions" \
             -H "x-goog-api-key: $GEMINI_API_KEY" \
@@ -24,6 +24,14 @@ jobs:
               "model": "gemini-3.8-flash",
               "input": "You are an AI security assistant. Reply with exactly: Gemini AI Autofix connected successfully"
             }' \
-            -o gemini-response.json
+            -o gemini-response.json \
+            -w "%{http_code}")
 
-          cat gemini-response.json 
+          echo "HTTP status: $HTTP_CODE"
+          echo "Gemini response:"
+          cat gemini-response.json
+
+          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+            echo "Gemini API request failed."
+            exit 1
+          fi
