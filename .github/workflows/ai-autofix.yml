@@ -11,8 +11,26 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Test AI Autofix workflow
+      - name: Test Gemini API
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          echo "AI Autofix workflow started"
-          echo "AI bot: vibe-devsecops-autofix"
-          echo "Ready for AI integration"
+          curl -sS \
+            -H "x-goog-api-key: $GEMINI_API_KEY" \
+            -H "Content-Type: application/json" \
+            -X POST \
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent" \
+            -d '{
+              "contents": [
+                {
+                  "parts": [
+                    {
+                      "text": "You are an AI security assistant. Reply with exactly: Gemini AI Autofix connected successfully"
+                    }
+                  ]
+                }
+              ]
+            }' \
+            -o gemini-response.json
+
+          cat gemini-response.json
