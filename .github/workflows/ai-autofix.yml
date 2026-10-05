@@ -11,26 +11,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Test Gemini API
+      - name: Test Gemini Interactions API
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           curl --fail-with-body -sS \
+            -X POST \
+            "https://generativelanguage.googleapis.com/v1beta/interactions" \
             -H "x-goog-api-key: $GEMINI_API_KEY" \
             -H "Content-Type: application/json" \
-            -X POST \
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent" \
             -d '{
-              "contents": [
-                {
-                  "parts": [
-                    {
-                      "text": "You are an AI security assistant. Reply with exactly: Gemini AI Autofix connected successfully"
-                    }
-                  ]
-                }
-              ]
+              "model": "gemini-3.8-flash",
+              "input": "You are an AI security assistant. Reply with exactly: Gemini AI Autofix connected successfully"
             }' \
             -o gemini-response.json
 
-          cat gemini-response.json
+          cat gemini-response.json 
