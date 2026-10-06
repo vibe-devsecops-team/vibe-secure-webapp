@@ -17,9 +17,22 @@ jobs:
         run: pip install semgrep
 
       - name: Show files
-        run: find 
+        run: find
 
       - name: Run Semgrep
-        run: semgrep scan --config=p/security-audit --config=p/owasp-top-ten --error .
-
-       
+        continue-on-error: true
+        run: |
+          semgrep scan \
+            --config=p/security-audit \
+            --config=p/owasp-top-ten \
+            --json \
+            --json-output=semgrep-results.json \
+            --error \
+            .
+      - name: Upload Semgrep results
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: semgrep-results
+          path: semgrep-results.json
+          if-no-files-found: error
