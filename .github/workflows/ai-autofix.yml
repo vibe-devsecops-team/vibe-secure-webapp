@@ -79,6 +79,12 @@ jobs:
               json.dump(request, f)
           PY
 
+        MAX_RETRIES=3
+        ATTEMPT=1
+
+        while [ "$ATTEMPT" -le "$MAX_RETRIES" ]; do
+          echo "Gemini API attempt $ATTEMPT/$MAX_RETRIES"
+
           HTTP_CODE=$(curl -sS \
             -X POST \
             "https://generativelanguage.googleapis.com/v1beta/interactions" \
@@ -89,10 +95,22 @@ jobs:
             -w "%{http_code}")
 
           echo "HTTP status: $HTTP_CODE"
-          echo "Gemini security analysis:"
+
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+            echo "Gemini security analysis:"
+            cat gemini-response.json
+            break
+          fi
+
+          echo "Gemini API request failed."
           cat gemini-response.json
 
-          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
-            echo "Gemini API request failed."
+          if [ "$ATTEMPT" -eq "$MAX_RETRIES" ]; then
+            echo "Gemini API failed after $MAX_RETRIES attempts."
             exit 1
           fi
+
+          echo "Waiting 10 seconds before retry..."
+          sleep 10
+          ATTEMPT=$((ATTEMPT + 1))
+        done
