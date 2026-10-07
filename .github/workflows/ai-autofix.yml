@@ -21,6 +21,9 @@ jobs:
           echo "Head SHA: ${{ github.event.workflow_run.head_sha }}"
           echo "Head branch: ${{ github.event.workflow_run.head_branch }}"
 
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
       - name: Download Semgrep results
         if: github.event_name == 'workflow_run'
         env:
@@ -39,9 +42,6 @@ jobs:
 
           echo "Semgrep JSON:"
           cat semgrep-artifact/semgrep-results.json
-
-      - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Analyze Semgrep results with Gemini
         if: github.event_name == 'workflow_run'
