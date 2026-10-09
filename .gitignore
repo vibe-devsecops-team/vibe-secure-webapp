@@ -41,3 +41,4 @@ logs/
 docker-compose.override.yml
 *.local.yml
 
+semgrep-results.json
