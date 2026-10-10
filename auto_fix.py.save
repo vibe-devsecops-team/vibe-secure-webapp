@@ -1,0 +1,212 @@
+import os
+import json
+import sys
+from dotenv import load_dotenv
+from google import genai
+from google.genai import types
+import logging
+import re
+import ast
+
+# 配置日誌，方便追蹤腳本執行狀況
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+def load_config() -> tuple:
+    """
+    從 .env 檔案載入 Gemini API 金鑰、模型名稱和溫度，並建立 client。
+    確保 API 金鑰從環境變數讀取，不可寫死。
+    """
+    load_dotenv()
+    api_key = os.getenv("GEMINI_API_KEY")
+    ai_model = os.getenv("AI_MODEL", "gemini-2.5-flash")
+    ai_temperature = float(os.getenv("AI_TEMP
+    if not api_key or api_key.startswith("your_"):
+        logging.error("錯誤：讀不到有效的 GEMINI_API_KEY，請確認 .env 設定。")
+        sys.exit(1)
+
+    client = genai.Client(api_key=api_key)
+    logging.info(f"Gemini API 已配置。模型: {ai_model}, 溫度: {ai_temperature}")
+    return client, ai_model, ai_temperature
+
+# --- Gemini API 互動 ---
+def call_gemini_api(prompt: str, model_name: str, temperature: float) -> str:
+    """
+    呼叫 Gemini API 取得修正後的程式碼。
+    """
+    try:
+        model = genai.GenerativeModel(model_name)
+        response = model.generate_content(
+            prompt,
+            generation_config=genai.types.GenerationConfig(
+                temperature=temperature,
+                candidate_count=1, # 我們只需要一個修正建   
+
+# --- Semgrep 報告處理 ---
+def read_semgrep_report(report_path: str) -> dict:
+    """
+    讀取 Semgrep JSON 掃描報告。
+    """
+    if not os.path.exists(report_path)
+        logging.info(f"Semgrep 報告 '{report_path}' 不存在。無需修正，腳本結束。")
+        return {"results": []}
+
+    try:
+        with open(report_path, 'r', encoding='utf-8') as f:
+            report = json.load(f)
+        return report
+    except json.JSONDecodeError as e:
+        logging.error(f"從 '{report_path}' 解析 JSON 時發生錯誤: {e}")
+        sys.exit(1)
+    except Exception as e:
+        logging.error(f"讀取 Semgrep 報告 '{report_path}' 時發生錯誤: {e}")
+        sys.exit(1)
+
+def create_gemini_prompt(check_id: str, message: str, context_code: list[str], problem_start_line: int, problem_end_line: int) -> str:
+    """
+    建構給 Gemini API 的 Prompt。
+    明確要求只回傳修正後的程式碼區塊本身，不要任何說明文字、不要 markdown 的 ``` 標記。
+    """
+    # 將上下文程式碼列表拼接成單一字串，保持原始換行
+    context_str = "".join(context_code)
+
+    prompt = f"""你是一位資深的 Python 資安工程師。你的任務是修正 Semgrep 識別出的資安漏洞或程式碼品質問題。
+
+**問題詳情:**
+- **規則 ID:** {check_id}
+- **問題描述:** {message}
+- **有問題的行號 (在提供的上下文程式碼中，為 1-indexed):** 第 {problem_start_line} 行到第 {problem_end_line} 行
+
+**上下文程式碼 (包含有問題的行及其前後程式碼):**
+```python
+{context_str.strip()}
+```
+
+**重要指示:**
+1.  **只回傳修正後的 Python 程式碼區塊本身。**
+2.  **不要包含任何解釋、註解或 Markdown 的 ``` 標記。**
+3.  **修正範圍必須僅限於有問題的行 ({problem_start_line} 到 {problem_end_line})。**
+4.  **不可更動上下文其餘程式碼的邏輯或結構。**
+5.  **確保修正後的程式碼是語法正確的 Python。**
+6.  **盡可能保持原始縮排。**
+
+**期望的輸出範例 (只有程式碼，沒有 ```，沒有解釋):**
+def fixed_function():
+    print("This is fixed code.")
+    return True
+"""
+    return prompt
+
+def main():
+    semgrep_report_path = "semgrep-results.json"
+    ai_model, ai_temperature = load_config()
+
+    report = read_semgrep_report(semgrep_report_path)
+    results = report.get("results", [])
+
+    if not results:
+        logging.info("Semgrep 報告中沒有發現任何問題。無需修正。")
+        sys.exit(0)
+
+    # 將發現的問題按檔案路徑分組
+    # 這樣可以針對單一檔案的所有問題進行處理，並應用「由後往前」的修正策略。
+    findings_by_file = {}
+    for res in results:
+        file_path = res["path"]
+        if file_path not in findings_by_file:
+            findings_by_file[file_path] = []
+        findings_by_file[file_path].append(res)
+
+    fixed_files_summary = set() # 記錄被修正的檔案
+    fixed_rules_summary = set() # 記錄被修正的規則
+
+    for file_path, findings in findings_by_file.items():
+        logging.info(f"正在處理檔案中的問題: {file_path}")
+
+        # 對於同一個檔案的多筆發現，必須由檔案的最後一筆問題往前處理。
+        # 這樣可以避免行號替換後互相影響，確保每次替換的行號都是準確的。
+        findings.sort(key=lambda x: x["start"]["line"], reverse=True)
+
+        # 讀取整個檔案內容到記憶體中，作為一個行列表
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                current_file_lines = f.readlines()
+            original_file_content = "".join(current_file_lines) # 儲存原始內容用於比較
+        except FileNotFoundError:
+            logging.error(f"跳過檔案 '{file_path}': 檔案不存在。")
+            continue
+        except Exception as e:
+            logging.error(f"跳過檔案 '{file_path}': 讀取檔案時發生錯誤: {e}")
+            continue
+
+        for finding in findings:
+            start_line = finding["start"]["line"] # Semgrep 報告中的起始行號 (1-indexed)
+            end_line = finding["end"]["line"]     # Semgrep 報告中的結束行號 (1-indexed)
+            check_id = finding["check_id"]
+            message = finding["extra"]["message"]
+
+            logging.info(f"  - 嘗試修正規則 '{check_id}'，位於行號 {start_line}-{end_line}")
+
+            # 將 1-indexed 行號轉換為 0-indexed 列表索引
+            start_idx_0 = start_line - 1
+            end_idx_0 = end_line - 1
+
+            # 提取問題行號前後各 5 行作為上下文
+            context_lines_count = 5
+            context_start_idx = max(0, start_idx_0 - context_lines_count)
+            context_end_idx = min(len(current_file_lines), end_idx_0 + context_lines_count + 1) # +1 因為 slice 結束是排他的
+
+            # 從當前記憶體中的檔案內容提取上下文程式碼
+            context_code_for_prompt = current_file_lines[context_start_idx:context_end_idx]
+
+            # 建構給 Gemini 的 Prompt
+            prompt = create_gemini_prompt(check_id, message, context_code_for_prompt, start_line, end_line)
+            
+            # 呼叫 Gemini API 取得修正後的程式碼
+            fixed_code_raw = call_gemini_api(prompt, ai_model, ai_temperature)
+
+            if not fixed_code_raw:
+                logging.warning(f"    Gemini 未返回修正建議，或返回空內容，跳過規則 '{check_id}' 在 '{file_path}' 的修正。")
+                continue
+
+            # 將 Gemini 返回的修正程式碼轉換為行列表，並確保每行末尾有換行符
+            # splitlines() 會移除換行符，所以需要手動加回
+            fixed_code_lines = [line + '\n' for line in fixed_code_raw.splitlines()]
+            # 處理最後一行可能沒有換行符的情況，如果原始問題行最後一行沒有換行符，則修正後也應保持
+            if not current_file_lines[end_idx_0].endswith('\n') and fixed_code_lines and fixed_code_lines[-1].endswith('\n'):
+                fixed_code_lines[-1] = fixed_code_lines[-1].rstrip('\n')
+
+            # 將原始檔案中對應行號範圍的內容，替換為修正後的程式碼
+            # 這裡直接修改 current_file_lines 列表，因為我們是從後往前處理，
+            # 這樣對後續（更靠前）的問題的行號不會造成影響。
+            current_file_lines[start_idx_0 : end_idx_0 + 1] = fixed_code_lines
+            
+            fixed_files_summary.add(file_path)
+            fixed_rules_summary.add(check_id)
+            logging.info(f"    成功為規則 '{check_id}' 生成並應用修正。")
+
+        # 處理完該檔案的所有發現後，將修改後的內容寫回檔案
+        modified_file_content = "".join(current_file_lines)
+        if modified_file_content != original_file_content:
+            try:
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    f.writelines(current_file_lines)
+                logging.info(f"成功將修正寫回檔案: '{file_path}'。")
+            except Exception as e:
+                logging.error(f"寫入修正到檔案 '{file_path}' 時發生錯誤: {e}")
+        else:
+            logging.info(f"檔案 '{file_path}' 處理完所有問題後，內容未發生變化。")
+
+    # --- 輸出摘要 ---
+    logging.info("\n--- 修正摘要 ---")
+    if fixed_files_summary:
+        logging.info(f"總共修正了 {len(fixed_files_summary)} 個檔案:")
+        for f in sorted(list(fixed_files_summary)):
+            logging.info(f"  - {f}")
+        logging.info(f"總共應用了 {len(fixed_rules_summary)} 條規則的修正:")
+        for r in sorted(list(fixed_rules_summary)):
+            logging.info(f"  - {r}")
+    else:
+        logging.info("沒有任何檔案被修正。")
+
+if __name__ == "__main__":
+    main()
