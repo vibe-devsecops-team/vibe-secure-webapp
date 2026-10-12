@@ -16,10 +16,8 @@ jobs:
       - name: Install Semgrep
         run: pip install semgrep
 
-      - name: Show files
-        run: find
-
       - name: Run Semgrep
+        id: semgrep
         continue-on-error: true
         run: |
           semgrep scan \
@@ -29,6 +27,7 @@ jobs:
             --json-output=semgrep-results.json \
             --error \
             .
+
       - name: Upload Semgrep results
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -36,3 +35,9 @@ jobs:
           name: semgrep-results
           path: semgrep-results.json
           if-no-files-found: error
+
+      - name: Fail if Semgrep found issues
+        if: steps.semgrep.outcome == 'failure'
+        run: |
+          echo "Semgrep 發現問題，Security Gate 不通過"
+          exit 1
